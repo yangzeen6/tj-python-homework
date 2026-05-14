@@ -1,10 +1,9 @@
 import pandas as pd
 import os
-import random
 
 # ==================== 配置参数 ====================
 CSV_PATH = "THUCNews/news_cleaned_from_thucnews.csv"
-OUTPUT_DIR = "THUCNews/data"
+OUTPUT_DIR = "THUCNews/sampled_data"
 SAMPLES_PER_CLASS = 19000       # 每类抽取数量
 RANDOM_SEED = 42                # 固定随机种子
 
@@ -97,9 +96,9 @@ def main():
                 f.write(f"{row['title']}\t{row['label']}\n")
         print(f"已保存: {path}，行数: {len(df)}条")
     
-    save_txt(train_df, 'train_new_2.txt')
-    save_txt(dev_df, 'dev_new_2.txt')
-    save_txt(test_df, 'test_new_2.txt')
+    save_txt(train_df, 'train_sampled.txt')
+    save_txt(dev_df, 'dev_sampled.txt')
+    save_txt(test_df, 'test_sampled.txt')
     
 if __name__ == "__main__":
     main()

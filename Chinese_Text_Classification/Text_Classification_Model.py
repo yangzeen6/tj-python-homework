@@ -9,9 +9,9 @@ from sklearn.metrics import accuracy_score, classification_report, ConfusionMatr
 
 # 配置参数
 dataset = 'THUCNews'
-train_path = f'{dataset}/data/train_new_2.txt'
-test_path = f'{dataset}/data/test_new_2.txt'
-STOPWORDS_PATH = f'{dataset}/data/stopwords_hit.txt'   # 停用词文件路径
+train_path = f'{dataset}/sampled_data/train_sampled.txt'
+test_path = f'{dataset}/sampled_data/test_sampled.txt'
+STOPWORDS_PATH = f'{dataset}/stopwords_hit.txt'   # 停用词文件路径
 
 CLASS_NAMES = ['finance', 'realty', 'stocks', 'education', 'science',
                'society', 'politics', 'sports', 'game', 'entertainment', 'home']
