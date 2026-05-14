@@ -24,6 +24,7 @@ python Text_Classification_Model.py
 ```
 
 ## 项目结构
+```
 .
 ├── THUCNews/                            # 数据集
 │   ├── class.txt                        # 类别名列表
@@ -39,3 +40,4 @@ python Text_Classification_Model.py
 ├── new_data_sampling.py                 # 随机抽取中文新闻与并对训练集、验证集和测试集进行分层
 ├── requirements.txt                     # Python依赖列表
 └── README.md                            # 本文件
+```
