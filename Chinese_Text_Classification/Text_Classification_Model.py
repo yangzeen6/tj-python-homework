@@ -4,6 +4,7 @@ import jieba
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report, ConfusionMatrixDisplay
 
@@ -14,7 +15,7 @@ test_path = f'{dataset}/sampled_data/test_sampled.txt'
 STOPWORDS_PATH = f'{dataset}/stopwords_hit.txt'   # 停用词文件路径
 
 CLASS_NAMES = ['finance', 'realty', 'stocks', 'education', 'science',
-               'society', 'politics', 'sports', 'game', 'entertainment', 'home']
+               'society', 'politics', 'sports', 'game', 'entertainment']
 
 MAX_FEATURES = 5000
 NGRAM_RANGE = (1, 2)         # 词级1-2gram
@@ -92,6 +93,9 @@ def main():
     tfidf = TfidfVectorizer(analyzer='word', ngram_range=NGRAM_RANGE, max_features=MAX_FEATURES)
     X_train = tfidf.fit_transform(X_train_cut)
     X_test = tfidf.transform(X_test_cut)
+    scaler = StandardScaler(with_mean=False)
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
     print(f"特征维度: {X_train.shape[1]}维，耗时: {time.time() - start:.2f}s")
 
     # 训练朴素贝叶斯模型
@@ -114,9 +118,9 @@ def main():
     print("\nSVM模型训练中......")
     svm_start = time.time()
     svm = SVC(kernel='linear', C=1.0, probability=True, random_state=42, max_iter=5000)
-    svm.fit(X_train, y_train)
-    svm_pred = svm.predict(X_test)
-    svm_prob = svm.predict_proba(X_test)
+    svm.fit(X_train_scaled, y_train)
+    svm_pred = svm.predict(X_test_scaled)
+    svm_prob = svm.predict_proba(X_test_scaled)
     svm_acc = accuracy_score(y_test, svm_pred)
     svm_time = time.time() - svm_start
     print(f"训练耗时: {svm_time:.2f}s，准确率: {svm_acc:.4f}")

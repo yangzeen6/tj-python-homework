@@ -12,13 +12,12 @@ LABEL_MAP = {
     'realty': 1,
     'stocks': 2,
     'education': 3,
-    'tech': 4,
+    'science': 4,
     'society': 5,
     'politics': 6,
     'sports': 7,
     'game': 8,
-    'entertainment': 9,
-    'home': 10
+    'entertainment': 9
 }
 
 # 分割比例
@@ -37,6 +36,7 @@ def main():
     
     # 重命名列
     df.columns = ['title', 'category', 'length']
+    df['category'] = df['category'].replace({'tech': 'science'})
     
     # 过滤掉类别不在检测类别范围内的行
     df = df[df['category'].isin(LABEL_MAP.keys())]
