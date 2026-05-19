@@ -1,0 +1,16 @@
+# 虚拟环境
+.env/
+venv/
+env/
+
+# Python 编译文件和缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VSCode 配置文件 (可选，避免个人编辑器配置影响他人)
+.vscode/
+
+# 操作系统自动生成的文件
+.DS_Store
+Thumbs.db
