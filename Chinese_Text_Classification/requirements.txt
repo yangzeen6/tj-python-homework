@@ -3,3 +3,4 @@ pandas
 jieba
 matplotlib
 scikit-learn
+torch
