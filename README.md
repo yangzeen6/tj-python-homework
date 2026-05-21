@@ -23,6 +23,11 @@ python new_data_sampling.py
 python Text_Classification_Model.py
 ```
 
+### 训练TextCNN模型，并输出模型分类效果
+```bash
+python TextCNN_Model.py
+```
+
 ## 项目结构
 ```
 .
@@ -41,3 +46,4 @@ python Text_Classification_Model.py
 ├── requirements.txt                     # Python依赖列表
 └── README.md                            # 本文件
 ```
+
