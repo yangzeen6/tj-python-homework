@@ -21,14 +21,16 @@ class Config:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         # 模型超参
-        self.dropout = 0.5
+        self.dropout = 0.7
+        self.weight_decay = 5e-4
         self.num_epochs = 20
+        self.early_stop_patience = 5
         self.batch_size = 128
         self.pad_size = 32
         self.learning_rate = 1e-3
         self.embed_size = 300
         self.filter_sizes = (2, 3, 4)
-        self.num_filters = 256
+        self.num_filters = 128
         self.n_vocab = 0  # 词表大小，运行时赋值
 
 class Model(nn.Module):

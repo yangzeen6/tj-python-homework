@@ -101,12 +101,14 @@ def train_textcnn():
     config.n_vocab = len(vocab)
     model = Model(config).to(config.device)
     init_network(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=2)
 
     model.train()
     best_dev_acc = 0.0
     best_state = None
+    epochs_no_improve = 0
+    best_model_path = f'{config.save_dir}/textcnn_best.pth'
 
     for epoch in range(config.num_epochs):
         train_acc_total, train_loss_total, step = 0, 0, 0
@@ -116,12 +118,12 @@ def train_textcnn():
             loss = F.cross_entropy(outputs, labels)
             loss.backward()
             optimizer.step()
-            
+
             predic = torch.max(outputs.data, 1)[1].cpu()
             train_acc_total += accuracy_score(labels.data.cpu(), predic)
             train_loss_total += loss.item()
             step += 1
-        
+
         train_acc = train_acc_total / step
         train_loss = train_loss_total / step
         dev_acc, dev_loss = evaluate_dl(config, model, dev_iter)
@@ -131,8 +133,15 @@ def train_textcnn():
 
         if dev_acc > best_dev_acc:
             best_dev_acc = dev_acc
+            epochs_no_improve = 0
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
-            torch.save(model.state_dict(), config.save_path)
+            torch.save(model.state_dict(), best_model_path)
+        else:
+            epochs_no_improve += 1
+            
+        if epochs_no_improve >= config.early_stop_patience:
+            print(f"\n早停触发！验证集准确率连续 {config.early_stop_patience} 个 epoch 未提升，停止训练。")
+            break
 
     print(f"\nTextCNN 训练结束，最佳验证集准确率: {best_dev_acc:.4f}")
     print("开始在测试集上进行最终评估...")
@@ -145,5 +154,5 @@ def train_textcnn():
 
 if __name__ == '__main__':
     # 你可以把不想运行的模型注释掉
-    train_machine_learning()
+    # train_machine_learning()
     train_textcnn()
