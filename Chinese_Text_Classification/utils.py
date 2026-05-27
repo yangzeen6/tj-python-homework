@@ -145,3 +145,50 @@ class DatasetIterater(object):
 
 def build_iterator(dataset, config):
     return DatasetIterater(dataset, config.batch_size, config.device)
+
+
+if __name__ == "__main__":
+    """提取预训练词向量：将原始词向量文件对齐到当前词表"""
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    train_path = os.path.join(BASE_DIR, 'THUCNews', 'sampled_data', 'train_sampled.txt')
+    vocab_path = os.path.join(BASE_DIR, 'THUCNews', 'vocab.pkl')
+    pretrain_path = os.path.join(BASE_DIR, 'THUCNews', 'sgns.sogou.char')
+    output_path = os.path.join(BASE_DIR, 'THUCNews', 'embedding_SougouNews')
+    emb_dim = 300
+
+    # 1. 加载或构建词表
+    if os.path.exists(vocab_path):
+        word_to_id = pkl.load(open(vocab_path, 'rb'))
+        print(f"已加载现有词表: {vocab_path}, 大小: {len(word_to_id)}")
+    else:
+        print(f"词表不存在，从训练数据构建...")
+        tokenizer = lambda x: [y for y in x]  # char-level
+        word_to_id = build_vocab(train_path, tokenizer=tokenizer,
+                                 max_size=MAX_VOCAB_SIZE, min_freq=1)
+        pkl.dump(word_to_id, open(vocab_path, 'wb'))
+        print(f"词表已保存: {vocab_path}, 大小: {len(word_to_id)}")
+
+    # 2. 创建随机初始化的 embedding 矩阵 (作为未命中词的 fallback)
+    embeddings = np.random.rand(len(word_to_id), emb_dim).astype('float32')
+
+    # 3. 从原始词向量文件中读取、匹配、替换
+    if not os.path.exists(pretrain_path):
+        print(f"错误: 原始词向量文件不存在: {pretrain_path}")
+        print("请下载 sgns.sogou.char 并放到 THUCNews/ 目录下")
+        exit(1)
+
+    hit = 0
+    with open(pretrain_path, 'r', encoding='UTF-8') as f:
+        for line in f:
+            parts = line.strip().split(' ')
+            word = parts[0]
+            if word in word_to_id:
+                idx = word_to_id[word]
+                vec = [float(x) for x in parts[1:1 + emb_dim]]
+                embeddings[idx] = np.asarray(vec, dtype='float32')
+                hit += 1
+
+    np.savez_compressed(output_path, embeddings=embeddings)
+    print(f"完成！命中: {hit}/{len(word_to_id)} ({100*hit/len(word_to_id):.1f}%)")
+    print(f"已保存: {output_path}.npz")

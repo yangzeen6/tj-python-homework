@@ -1,3 +1,4 @@
+import os
 import time
 import numpy as np
 import jieba
@@ -9,12 +10,13 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report, ConfusionMatrixDisplay
 
 # 配置参数
-dataset = 'THUCNews'
-train_path = f'{dataset}/sampled_data/train_sampled.txt'
-test_path = f'{dataset}/sampled_data/test_sampled.txt'
-STOPWORDS_PATH = f'{dataset}/stopwords_hit.txt'   # 停用词文件路径
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+dataset = os.path.join(BASE_DIR, 'THUCNews')
+train_path = os.path.join(dataset, 'sampled_data', 'train_sampled.txt')
+test_path = os.path.join(dataset, 'sampled_data', 'test_sampled.txt')
+STOPWORDS_PATH = os.path.join(dataset, 'stopwords_hit.txt')
 
-CLASS_NAMES = ['finance', 'realty', 'stocks', 'education', 'science',
+CLASS_NAMES = ['finance', 'home', 'stocks', 'education', 'science',
                'society', 'politics', 'sports', 'game', 'entertainment']
 
 MAX_FEATURES = 5000
@@ -112,7 +114,7 @@ def main():
     print("\n朴素贝叶斯模型分类效果数据：")
     print(classification_report(y_test, nb_pred, target_names=CLASS_NAMES, digits=4))
     plot_confusion_matrix(y_test, nb_pred, title='Naive Bayes Confusion Matrix',
-                        save_path=f'{dataset}/nb_confusion_matrix.png')
+                        save_path=os.path.join(dataset, 'nb_confusion_matrix.png'))
 
     # 训练SVM模型
     print("\nSVM模型训练中......")
@@ -128,7 +130,7 @@ def main():
     print("\nSVM模型分类效果数据：")
     print(classification_report(y_test, svm_pred, target_names=CLASS_NAMES, digits=4))
     plot_confusion_matrix(y_test, svm_pred, title='SVM Confusion Matrix',
-                        save_path=f'{dataset}/svm_confusion_matrix.png')
+                        save_path=os.path.join(dataset, 'svm_confusion_matrix.png'))
 
     # 对朴素贝叶斯模型和SVM模型进行集成
     ensemble_prob = (nb_prob + svm_prob) / 2.0
@@ -143,7 +145,7 @@ def main():
     print("\n集成模型分类效果数据：")
     print(classification_report(y_test, ensemble_pred, target_names=CLASS_NAMES, digits=4))
     plot_confusion_matrix(y_test, ensemble_pred, title='Ensemble Confusion Matrix',
-                        save_path=f'{dataset}/ensemble_confusion_matrix.png')
+                        save_path=os.path.join(dataset, 'ensemble_confusion_matrix.png'))
 
     print("\n")
     print("│ 模型           │ 准确率   │")

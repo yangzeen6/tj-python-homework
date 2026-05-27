@@ -1,5 +1,5 @@
 finance
-realty
+home
 stocks
 education
 science

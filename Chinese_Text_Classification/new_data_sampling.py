@@ -2,14 +2,15 @@ import pandas as pd
 import os
 
 # ==================== 配置参数 ====================
-CSV_PATH = "THUCNews/news_cleaned_from_thucnews.csv"
-OUTPUT_DIR = "THUCNews/sampled_data"
-SAMPLES_PER_CLASS = 19000       # 每类抽取数量
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(BASE_DIR, "THUCNews", "news_cleaned_from_thucnews.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "THUCNews", "sampled_data")
+SAMPLES_PER_CLASS = 20000       # 每类抽取数量
 RANDOM_SEED = 42                # 固定随机种子
 
 LABEL_MAP = {
     'finance': 0,
-    'realty': 1,
+    'home': 1,
     'stocks': 2,
     'education': 3,
     'science': 4,
