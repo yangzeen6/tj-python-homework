@@ -1,5 +1,6 @@
 import time
 import os
+import csv
 import jieba
 import numpy as np
 import torch
@@ -7,7 +8,8 @@ import torch.nn.functional as F
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import accuracy_score, classification_report
 
 from utils import (load_stopwords, load_ml_data, build_dl_dataset, build_iterator,
@@ -57,10 +59,11 @@ def train_machine_learning():
     print(classification_report(y_test, nb_pred, target_names=class_names, digits=4))
     plot_confusion_matrix_custom(y_test, nb_pred, class_names, 'Naive Bayes Confusion Matrix', os.path.join(DATASET, 'nb_confusion_matrix.png'))
 
-    # --- 训练 SVM (SVC with probability for ensemble) ---
+    # --- 训练 SVM (LinearSVC + 概率校准) ---
     print("\n【SVM】训练中...")
     svm_start = time.time()
-    svm = SVC(kernel='linear', C=1.0, probability=True, random_state=42, max_iter=5000)
+    base_svm = LinearSVC(C=1.0, random_state=42, max_iter=5000, dual=False)
+    svm = CalibratedClassifierCV(base_svm, cv=3, method='sigmoid')
     svm.fit(X_train_scaled, y_train)
     svm_pred = svm.predict(X_test_scaled)
     svm_prob = svm.predict_proba(X_test_scaled)
@@ -93,14 +96,14 @@ def train_machine_learning():
 # ========== 2. 深度学习 (TextCNN) 训练评估模块 ==========
 def evaluate_dl(config, model, data_iter, test=False):
     model.eval()
-    loss_total = 0
+    loss_total = 0.0
     predict_all = np.array([], dtype=int)
     labels_all = np.array([], dtype=int)
     with torch.no_grad():
         for texts, labels in data_iter:
             outputs = model(texts)
             loss = F.cross_entropy(outputs, labels)
-            loss_total += loss
+            loss_total += loss.item()
             labels = labels.data.cpu().numpy()
             predic = torch.max(outputs.data, 1)[1].cpu().numpy()
             labels_all = np.append(labels_all, labels)
@@ -143,6 +146,12 @@ def train_textcnn():
     epochs_no_improve = 0
     best_model_path = os.path.join(config.save_dir, 'textcnn_best.pth')
 
+    # CSV 日志
+    log_path = os.path.join(DATASET, 'training_log.csv')
+    log_file = open(log_path, 'w', newline='', encoding='utf-8')
+    log_writer = csv.writer(log_file)
+    log_writer.writerow(['epoch', 'train_loss', 'train_acc', 'dev_loss', 'dev_acc'])
+
     for epoch in range(config.num_epochs):
         train_acc_total, train_loss_total, step = 0, 0, 0
         for texts, labels in train_iter:
@@ -162,6 +171,7 @@ def train_textcnn():
         dev_acc, dev_loss = evaluate_dl(config, model, dev_iter)
         scheduler.step(dev_acc)
 
+        log_writer.writerow([epoch + 1, train_loss, train_acc, dev_loss, dev_acc])
         print(f"Epoch [{epoch+1:2d}/{config.num_epochs}] | Train Loss: {train_loss:.4f} Acc: {train_acc:.4f} | Dev Loss: {dev_loss:.4f} Acc: {dev_acc:.4f}")
 
         if dev_acc > best_dev_acc:
@@ -176,6 +186,8 @@ def train_textcnn():
             print(f"\n早停触发！验证集准确率连续 {config.early_stop_patience} 个 epoch 未提升，停止训练。")
             break
 
+    log_file.close()
+    print(f"训练日志已保存至: {log_path}")
     print(f"\nTextCNN 训练结束，最佳验证集准确率: {best_dev_acc:.4f}")
     print("开始在测试集上进行最终评估...")
     model.load_state_dict(best_state)
