@@ -166,4 +166,4 @@ with gr.Blocks(title="中文新闻分类系统") as demo:
     - TextCNN 使用预训练词向量 + batch 级实时评估训练
     """)
 
-demo.launch()
+demo.launch(share=True)
