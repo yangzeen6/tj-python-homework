@@ -74,8 +74,9 @@ def train_machine_learning():
     svm_pred = svm.predict(X_test_scaled)
     svm_prob = svm.predict_proba(X_test_scaled)
     svm_acc = accuracy_score(y_test, svm_pred)
-    svm_time = time.time() - svm_start
-    print(f"训练完成，耗时: {svm_time:.2f}s，准确率: {svm_acc:.4f}")
+    svm_train_time = time.time() - svm_start
+    svm_time = t_preprocess + svm_train_time
+    print(f"训练完成，耗时: {svm_train_time:.2f}s (不含预处理) / {svm_time:.2f}s (含预处理)，准确率: {svm_acc:.4f}")
     print("\n【SVM 分类报告】")
     print(classification_report(y_test, svm_pred, target_names=class_names, digits=4))
     plot_confusion_matrix_custom(y_test, svm_pred, class_names, 'SVM Confusion Matrix', os.path.join(DATASET, 'svm_confusion_matrix.png'))
