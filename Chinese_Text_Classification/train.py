@@ -31,19 +31,24 @@ def train_machine_learning():
     train_texts, y_train = load_ml_data(train_path, stopwords)
     test_texts, y_test = load_ml_data(test_path, stopwords)
 
-    print("正在进行 Jieba 分词与 TF-IDF 特征提取...")
+    preprocess_start = time.time()
     tokenize = lambda text: ' '.join(jieba.lcut(text))
     X_train_words = [tokenize(text) for text in train_texts]
     X_test_words = [tokenize(text) for text in test_texts]
+    t_jieba = time.time() - preprocess_start
+    print(f"Jieba 分词完成，耗时: {t_jieba:.2f}s")
 
     vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
     X_train_tfidf = vectorizer.fit_transform(X_train_words)
     X_test_tfidf = vectorizer.transform(X_test_words)
+    t_tfidf = time.time() - preprocess_start - t_jieba
+    print(f"TF-IDF 特征提取完成，耗时: {t_tfidf:.2f}s")
 
-    print("标准化数据 (StandardScaler, 保持稀疏)...")
     scaler = StandardScaler(with_mean=False)
     X_train_scaled = scaler.fit_transform(X_train_tfidf)
     X_test_scaled = scaler.transform(X_test_tfidf)
+    t_preprocess = time.time() - preprocess_start
+    print(f"数据预处理总耗时: {t_preprocess:.2f}s (Jieba+TF-IDF+Scaler)")
 
     # --- 训练朴素贝叶斯 (使用未缩放的 TF-IDF, MultinomialNB 不接受负值) ---
     print("\n【朴素贝叶斯】训练中...")
@@ -53,8 +58,9 @@ def train_machine_learning():
     nb_pred = nb.predict(X_test_tfidf)
     nb_prob = nb.predict_proba(X_test_tfidf)
     nb_acc = accuracy_score(y_test, nb_pred)
-    nb_time = time.time() - nb_start
-    print(f"训练完成，耗时: {nb_time:.2f}s，准确率: {nb_acc:.4f}")
+    nb_train_time = time.time() - nb_start
+    nb_time = t_preprocess + nb_train_time
+    print(f"训练完成，耗时: {nb_train_time:.2f}s (不含预处理) / {nb_time:.2f}s (含预处理)，准确率: {nb_acc:.4f}")
     print("\n【朴素贝叶斯分类报告】")
     print(classification_report(y_test, nb_pred, target_names=class_names, digits=4))
     plot_confusion_matrix_custom(y_test, nb_pred, class_names, 'Naive Bayes Confusion Matrix', os.path.join(DATASET, 'nb_confusion_matrix.png'))
@@ -154,7 +160,7 @@ def train_textcnn():
     torch.cuda.manual_seed_all(1)
 
     config = Config()
-    # 本版不使用预训练词向量，纯随机初始化
+    # 使用纯随机初始化（不用预训练词向量）
     if not os.path.exists(config.save_dir):
         os.makedirs(config.save_dir)
 
